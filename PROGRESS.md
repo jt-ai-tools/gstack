@@ -29,21 +29,21 @@
 - [ ] .agents/skills/gstack-unfreeze/SKILL.md
 - [ ] .agents/skills/gstack-upgrade/SKILL.md
 - [ ] .agents/skills/gstack/SKILL.md
-- [ ] AGENTS.md
+- [x] AGENTS.md
 - [x] ARCHITECTURE.md
 - [x] BROWSER.md
 - [x] CHANGELOG.md
 - [x] CLAUDE.md
 - [x] CONTRIBUTING.md
 - [x] README.md
-- [ ] SKILL.md
-- [ ] TODOS.md
+- [x] SKILL.md
+- [x] TODOS.md
 - [ ] browse/SKILL.md
 - [ ] careful/SKILL.md
 - [ ] codex/SKILL.md
 - [ ] design-consultation/SKILL.md
 - [ ] design-review/SKILL.md
-- [ ] docs/skills.md
+- [x] docs/skills.md
 - [ ] document-release/SKILL.md
 - [ ] freeze/SKILL.md
 - [ ] gstack-upgrade/SKILL.md
@@ -68,5 +68,6 @@
 - [ ] unfreeze/SKILL.md
 
 ## 最後更新時間
+Sat Mar 21 23:15:33 CST 2026
 Sat Mar 21 23:10:39 CST 2026
 Sat Mar 21 22:43:56 CST 2026
