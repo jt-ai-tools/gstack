@@ -8,27 +8,27 @@
 
 ## 任務清單
 
-- [ ] .agents/skills/gstack-browse/SKILL.md
-- [ ] .agents/skills/gstack-careful/SKILL.md
-- [ ] .agents/skills/gstack-design-consultation/SKILL.md
-- [ ] .agents/skills/gstack-design-review/SKILL.md
-- [ ] .agents/skills/gstack-document-release/SKILL.md
-- [ ] .agents/skills/gstack-freeze/SKILL.md
-- [ ] .agents/skills/gstack-guard/SKILL.md
-- [ ] .agents/skills/gstack-investigate/SKILL.md
-- [ ] .agents/skills/gstack-office-hours/SKILL.md
-- [ ] .agents/skills/gstack-plan-ceo-review/SKILL.md
-- [ ] .agents/skills/gstack-plan-design-review/SKILL.md
-- [ ] .agents/skills/gstack-plan-eng-review/SKILL.md
-- [ ] .agents/skills/gstack-qa-only/SKILL.md
-- [ ] .agents/skills/gstack-qa/SKILL.md
-- [ ] .agents/skills/gstack-retro/SKILL.md
-- [ ] .agents/skills/gstack-review/SKILL.md
-- [ ] .agents/skills/gstack-setup-browser-cookies/SKILL.md
-- [ ] .agents/skills/gstack-ship/SKILL.md
-- [ ] .agents/skills/gstack-unfreeze/SKILL.md
-- [ ] .agents/skills/gstack-upgrade/SKILL.md
-- [ ] .agents/skills/gstack/SKILL.md
+- [x] .agents/skills/gstack-browse/SKILL.md
+- [x] .agents/skills/gstack-careful/SKILL.md
+- [x] .agents/skills/gstack-design-consultation/SKILL.md
+- [x] .agents/skills/gstack-design-review/SKILL.md
+- [x] .agents/skills/gstack-document-release/SKILL.md
+- [x] .agents/skills/gstack-freeze/SKILL.md
+- [x] .agents/skills/gstack-guard/SKILL.md
+- [x] .agents/skills/gstack-investigate/SKILL.md
+- [x] .agents/skills/gstack-office-hours/SKILL.md
+- [x] .agents/skills/gstack-plan-ceo-review/SKILL.md
+- [x] .agents/skills/gstack-plan-design-review/SKILL.md
+- [x] .agents/skills/gstack-plan-eng-review/SKILL.md
+- [x] .agents/skills/gstack-qa-only/SKILL.md
+- [x] .agents/skills/gstack-qa/SKILL.md
+- [x] .agents/skills/gstack-retro/SKILL.md
+- [x] .agents/skills/gstack-review/SKILL.md
+- [x] .agents/skills/gstack-setup-browser-cookies/SKILL.md
+- [x] .agents/skills/gstack-ship/SKILL.md
+- [x] .agents/skills/gstack-unfreeze/SKILL.md
+- [x] .agents/skills/gstack-upgrade/SKILL.md
+- [x] .agents/skills/gstack/SKILL.md
 - [x] AGENTS.md
 - [x] ARCHITECTURE.md
 - [x] BROWSER.md
