@@ -49,15 +49,15 @@
 - [x] gstack-upgrade/SKILL.md
 - [x] guard/SKILL.md
 - [x] investigate/SKILL.md
-- [ ] office-hours/SKILL.md
-- [ ] plan-ceo-review/SKILL.md
-- [ ] plan-design-review/SKILL.md
-- [ ] plan-eng-review/SKILL.md
-- [ ] qa-only/SKILL.md
-- [ ] qa/SKILL.md
-- [ ] qa/references/issue-taxonomy.md
-- [ ] qa/templates/qa-report-template.md
-- [ ] retro/SKILL.md
+- [x] office-hours/SKILL.md
+- [x] plan-ceo-review/SKILL.md
+- [x] plan-design-review/SKILL.md
+- [x] plan-eng-review/SKILL.md
+- [x] qa-only/SKILL.md
+- [x] qa/SKILL.md
+- [x] qa/references/issue-taxonomy.md
+- [x] qa/templates/qa-report-template.md
+- [x] retro/SKILL.md
 - [x] review/SKILL.md
 - [ ] review/TODOS-format.md
 - [ ] review/checklist.md
