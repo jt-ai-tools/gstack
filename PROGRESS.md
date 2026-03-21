@@ -38,11 +38,11 @@
 - [x] README.md
 - [x] SKILL.md
 - [x] TODOS.md
-- [ ] browse/SKILL.md
-- [ ] careful/SKILL.md
-- [ ] codex/SKILL.md
-- [ ] design-consultation/SKILL.md
-- [ ] design-review/SKILL.md
+- [x] browse/SKILL.md
+- [x] careful/SKILL.md
+- [x] codex/SKILL.md
+- [x] design-consultation/SKILL.md
+- [x] design-review/SKILL.md
 - [x] docs/skills.md
 - [ ] document-release/SKILL.md
 - [ ] freeze/SKILL.md
