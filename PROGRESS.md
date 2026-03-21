@@ -58,13 +58,13 @@
 - [ ] qa/references/issue-taxonomy.md
 - [ ] qa/templates/qa-report-template.md
 - [ ] retro/SKILL.md
-- [ ] review/SKILL.md
+- [x] review/SKILL.md
 - [ ] review/TODOS-format.md
 - [ ] review/checklist.md
 - [ ] review/design-checklist.md
 - [ ] review/greptile-triage.md
 - [ ] setup-browser-cookies/SKILL.md
-- [ ] ship/SKILL.md
+- [x] ship/SKILL.md
 - [ ] unfreeze/SKILL.md
 
 ## 最後更新時間
