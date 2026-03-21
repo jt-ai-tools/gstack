@@ -44,11 +44,11 @@
 - [x] design-consultation/SKILL.md
 - [x] design-review/SKILL.md
 - [x] docs/skills.md
-- [ ] document-release/SKILL.md
-- [ ] freeze/SKILL.md
-- [ ] gstack-upgrade/SKILL.md
-- [ ] guard/SKILL.md
-- [ ] investigate/SKILL.md
+- [x] document-release/SKILL.md
+- [x] freeze/SKILL.md
+- [x] gstack-upgrade/SKILL.md
+- [x] guard/SKILL.md
+- [x] investigate/SKILL.md
 - [ ] office-hours/SKILL.md
 - [ ] plan-ceo-review/SKILL.md
 - [ ] plan-design-review/SKILL.md
