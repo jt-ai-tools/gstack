@@ -30,11 +30,11 @@
 - [ ] .agents/skills/gstack-upgrade/SKILL.md
 - [ ] .agents/skills/gstack/SKILL.md
 - [ ] AGENTS.md
-- [ ] ARCHITECTURE.md
-- [ ] BROWSER.md
-- [ ] CHANGELOG.md
-- [ ] CLAUDE.md
-- [ ] CONTRIBUTING.md
+- [x] ARCHITECTURE.md
+- [x] BROWSER.md
+- [x] CHANGELOG.md
+- [x] CLAUDE.md
+- [x] CONTRIBUTING.md
 - [x] README.md
 - [ ] SKILL.md
 - [ ] TODOS.md
@@ -68,4 +68,5 @@
 - [ ] unfreeze/SKILL.md
 
 ## 最後更新時間
+Sat Mar 21 23:10:39 CST 2026
 Sat Mar 21 22:43:56 CST 2026
