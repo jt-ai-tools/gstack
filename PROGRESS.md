@@ -59,13 +59,13 @@
 - [x] qa/templates/qa-report-template.md
 - [x] retro/SKILL.md
 - [x] review/SKILL.md
-- [ ] review/TODOS-format.md
-- [ ] review/checklist.md
-- [ ] review/design-checklist.md
-- [ ] review/greptile-triage.md
-- [ ] setup-browser-cookies/SKILL.md
+- [x] review/TODOS-format.md
+- [x] review/checklist.md
+- [x] review/design-checklist.md
+- [x] review/greptile-triage.md
+- [x] setup-browser-cookies/SKILL.md
 - [x] ship/SKILL.md
-- [ ] unfreeze/SKILL.md
+- [x] unfreeze/SKILL.md
 
 ## 最後更新時間
 Sat Mar 21 23:15:33 CST 2026
