@@ -11,10 +11,11 @@
 
 import { describe, test, expect } from "bun:test";
 import { spawnSync } from "child_process";
-import { closeSync, mkdirSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync } from "fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { createHash } from "crypto";
 import { tmpdir } from "os";
 import { join } from "path";
+import { pathToFileURL } from "url";
 
 const ROOT = join(import.meta.dir, "..");
 const SCRIPT = join(ROOT, ".github", "scripts", "gate-secret-scan.mjs");
@@ -299,23 +300,27 @@ describe("gate-secret-scan.mjs transport failures", () => {
     }
   });
 
-  test.skipIf(process.platform === "win32")("a failed diff input read fails closed", () => {
-    // A directory can be opened on Unix, but stdin read must fail with EISDIR.
-    const dir = mkdtempSync(join(tmpdir(), "gate-secret-read-error-"));
-    const fd = openSync(dir, "r");
-    try {
-      const r = spawnSync(NODE, [SCRIPT], {
-        cwd: ROOT,
-        stdio: [fd, "pipe", "pipe"],
-        encoding: "utf8",
-        timeout: 60_000,
-      });
-      expect(r.status).toBe(1);
-      expect(r.stderr).toContain("input error");
-      expect(r.stderr).toContain("fail-closed");
-    } finally {
-      closeSync(fd);
-      rmSync(dir, { recursive: true, force: true });
-    }
+  test("a failed diff input read fails closed", () => {
+    // A directory fd passed through Bun's spawnSync did not produce a read
+    // error in CI. Inject the stream failure in the Node child itself so the
+    // test exercises the gate's actual error listener on every platform.
+    const wrapper = [
+      'import { Readable } from "node:stream";',
+      'const input = new Readable({ read() {',
+      '  this.destroy(Object.assign(new Error("simulated diff read failure"), { code: "EIO" }));',
+      '} });',
+      'Object.defineProperty(process, "stdin", { value: input });',
+      `await import(${JSON.stringify(pathToFileURL(SCRIPT).href)});`,
+    ].join("\n");
+    const r = spawnSync(NODE, ["--input-type=module", "--eval", wrapper], {
+      cwd: ROOT,
+      encoding: "utf8",
+      timeout: 60_000,
+    });
+    expect(r.error).toBeUndefined();
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain("input error (EIO)");
+    expect(r.stderr).toContain("fail-closed");
+    expect(r.stdout).not.toContain("0 high");
   });
 });

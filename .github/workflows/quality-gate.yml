@@ -62,12 +62,13 @@ jobs:
 
       - name: Scan changed text for credentials (added lines, own redact engine)
         env:
-          # Replay the previously unscanned bulk merge exactly once on this
-          # fork's immediate repair push. Later pushes, PRs, manual runs and
-          # upstream retain their original diff base and permissions.
-          BASE_SHA: ${{ (github.repository == 'jt-ai-tools/gstack' && github.event_name == 'push' && github.event.before == 'fd81bfb5e961935759fe919ab8df37d33dca5540' && '4c54d036c1694c38c41dfedad3752784361c831a') || github.event.pull_request.base.sha || github.event.before }}
+          # Replay the unscanned bulk merge on this exact follow-up repair push.
+          # The first repair stopped at contract tests before scanning.
+          # Other pushes, PRs, manual runs and upstream retain their original
+          # diff base and permissions.
+          BASE_SHA: ${{ (github.repository == 'jt-ai-tools/gstack' && github.event_name == 'push' && github.event.before == '592d390b781cf880e5203c4ac8f7bf1699d664ef' && '4c54d036c1694c38c41dfedad3752784361c831a') || github.event.pull_request.base.sha || github.event.before }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-          REPLAY_BULK_MERGE: ${{ github.repository == 'jt-ai-tools/gstack' && github.event_name == 'push' && github.event.before == 'fd81bfb5e961935759fe919ab8df37d33dca5540' }}
+          REPLAY_BULK_MERGE: ${{ github.repository == 'jt-ai-tools/gstack' && github.event_name == 'push' && github.event.before == '592d390b781cf880e5203c4ac8f7bf1699d664ef' }}
         run: |
           set -euo pipefail
           # Exact-SHA shallow fetches: the checkout above is depth-1 of the
