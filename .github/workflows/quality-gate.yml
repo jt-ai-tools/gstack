@@ -63,12 +63,13 @@ jobs:
       - name: Scan changed text for credentials (added lines, own redact engine)
         env:
           # Replay the unscanned bulk merge on this exact follow-up repair push.
-          # The first repair stopped at contract tests before scanning.
+          # Recheck every finding with value-free, hashed-path diagnostics.
           # Other pushes, PRs, manual runs and upstream retain their original
           # diff base and permissions.
-          BASE_SHA: ${{ (github.repository == 'jt-ai-tools/gstack' && github.event_name == 'push' && github.event.before == '592d390b781cf880e5203c4ac8f7bf1699d664ef' && '4c54d036c1694c38c41dfedad3752784361c831a') || github.event.pull_request.base.sha || github.event.before }}
+          BASE_SHA: ${{ (github.repository == 'jt-ai-tools/gstack' && github.event_name == 'push' && github.event.before == '73dd2ec252a5b07837fff12b3f67fce2cdebdf9d' && '4c54d036c1694c38c41dfedad3752784361c831a') || github.event.pull_request.base.sha || github.event.before }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-          REPLAY_BULK_MERGE: ${{ github.repository == 'jt-ai-tools/gstack' && github.event_name == 'push' && github.event.before == '592d390b781cf880e5203c4ac8f7bf1699d664ef' }}
+          GSTACK_GATE_DIAGNOSTICS: "1"
+          REPLAY_BULK_MERGE: ${{ github.repository == 'jt-ai-tools/gstack' && github.event_name == 'push' && github.event.before == '73dd2ec252a5b07837fff12b3f67fce2cdebdf9d' }}
         run: |
           set -euo pipefail
           # Exact-SHA shallow fetches: the checkout above is depth-1 of the
@@ -86,7 +87,7 @@ jobs:
             git fetch --no-tags --deepen=1 origin 2>/dev/null || true
             BASE_SHA=$(git rev-parse HEAD^)
           fi
-          git diff --unified=0 --no-color "$BASE_SHA" "$HEAD_SHA" -- \
+          git -c core.quotePath=true diff --unified=0 --no-color "$BASE_SHA" "$HEAD_SHA" -- \
             . \
             ':(exclude)test/fixtures/**' \
             ':(exclude)browse/test/fixtures/**' \

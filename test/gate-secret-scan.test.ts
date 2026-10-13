@@ -80,7 +80,7 @@ describe("gate-secret-scan.mjs fail-closed legs", () => {
     const r = scan(line.repeat(2100));
     expect(r.code).toBe(1);
     expect(r.out).toContain("1 high");
-    expect(r.out).toContain("one file's added text exceeds");
+    expect(r.out).toContain("file_added_text_too_large");
     expect(r.out).toContain("fail-closed");
   }, 60_000);
 
@@ -319,8 +319,171 @@ describe("gate-secret-scan.mjs transport failures", () => {
     });
     expect(r.error).toBeUndefined();
     expect(r.status).toBe(1);
-    expect(r.stderr).toContain("input error (EIO)");
+    expect(r.stderr).toContain("input_read_failed");
+    expect(r.stderr).not.toContain("simulated diff read failure");
+    expect(r.stderr).not.toContain("EIO");
     expect(r.stderr).toContain("fail-closed");
     expect(r.stdout).not.toContain("0 high");
+  });
+});
+
+const SECRET_SENTINEL = "DO_NOT_PRINT_METADATA_SENTINEL_4931";
+function metadataReport(findings: Array<Record<string, unknown>>): string {
+  const counts = { HIGH: 0, MEDIUM: 0, LOW: 0, WARN: 0 };
+  for (const finding of findings) counts[finding.severity as keyof typeof counts] += 1;
+  return JSON.stringify({ findings, counts, oversize: false,
+    description: SECRET_SENTINEL, preview: SECRET_SENTINEL, source: SECRET_SENTINEL });
+}
+function highFinding(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return { id: "aws.access_key", severity: "HIGH", line: 1, col: 1,
+    preview: SECRET_SENTINEL, description: SECRET_SENTINEL, matchedText: SECRET_SENTINEL,
+    ...overrides };
+}
+function gitAt(dir: string, args: string[]): string {
+  const r = spawnSync("git", args, { cwd: dir, encoding: "utf8", maxBuffer: 32 * 1024 * 1024 });
+  expect(r.error).toBeUndefined();
+  expect(r.status).toBe(0);
+  return r.stdout;
+}
+function withMetadataScanner(
+  body: string,
+  files: Record<string, string>,
+  check: (dir: string, env: NodeJS.ProcessEnv, diff: string) => void,
+): void {
+  withScannerStub(body, (dir) => {
+    gitAt(dir, ["init", "--quiet"]);
+    for (const [name, content] of Object.entries(files)) writeFileSync(join(dir, name), content);
+    gitAt(dir, ["add", "--", ...Object.keys(files)]);
+    const head = gitAt(dir, ["write-tree"]).trim();
+    const diff = gitAt(dir, ["-c", "core.quotePath=true", "diff", "--cached", "--unified=0", "--no-color"]);
+    check(dir, { ...process.env, GSTACK_GATE_DIAGNOSTICS: "1", HEAD_SHA: head }, diff);
+  });
+}
+function findingRows(output: string): Array<Record<string, unknown>> {
+  return output.split("\n").filter((line) => line.startsWith("credential finding: "))
+    .map((line) => JSON.parse(line.slice("credential finding: ".length)));
+}
+const reportBody = (findings: Array<Record<string, unknown>>) =>
+  `console.log(${JSON.stringify(metadataReport(findings))});\nprocess.exitCode = ${findings.length ? 3 : 0};`;
+
+describe("gate-secret-scan.mjs public metadata diagnostics", () => {
+  test("only the strict schema is logged; tracked paths, previews and stderr stay private", () => {
+    const path = `${SECRET_SENTINEL}.txt`;
+    withMetadataScanner(reportBody([highFinding()]) + `\nconsole.error(${JSON.stringify(SECRET_SENTINEL)});`,
+      { [path]: "safe content" }, (dir, env, diff) => {
+        const r = scan(diff, dir, env);
+        expect(r.code).toBe(1);
+        expect(findingRows(r.out)).toEqual([{
+          rule: "aws.access_key", severity: "HIGH", pathHash: hash(path), line: 1, column: 1,
+        }]);
+        expect(r.out).not.toContain(SECRET_SENTINEL);
+        expect(r.out).not.toContain("safe content");
+      });
+  });
+
+  test("all current HIGH rules have an explicit public-schema ID", () => {
+    const patterns = readFileSync(join(ROOT, "lib", "redact-patterns.ts"), "utf8");
+    const ids = [...patterns.matchAll(/id: "([^"]+)",\n\s*tier: "HIGH"/g)].map((match) => match[1]);
+    expect(ids.length).toBeGreaterThan(0);
+    withMetadataScanner(reportBody(ids.map((id) => highFinding({ id }))), { "a.txt": "safe" }, (dir, env, diff) => {
+      const r = scan(diff, dir, env);
+      expect(r.code).toBe(1);
+      expect(findingRows(r.out).map((row) => row.rule)).toEqual(ids);
+      expect(r.out).not.toContain(SECRET_SENTINEL);
+    });
+  });
+
+  test("multiple hunks, +++ additions and UTF-16 columns map to original source lines", () => {
+    const report = [highFinding({ line: 2, col: 4 }), highFinding({ line: 3, col: 3 })];
+    withMetadataScanner(reportBody(report), { "a.txt": "tracked" }, (dir, env) => {
+      const diff = "diff --git a/a.txt b/a.txt\n--- a/a.txt\n+++ b/a.txt\n" +
+        "@@ -2,0 +3,2 @@\n+first\n+😀 word\n@@ -35,0 +37 @@\n+++last\n";
+      const r = scan(diff, dir, env);
+      expect(findingRows(r.out)).toEqual([
+        { rule: "aws.access_key", severity: "HIGH", pathHash: hash("a.txt"), line: 4, column: 4 },
+        { rule: "aws.access_key", severity: "HIGH", pathHash: hash("a.txt"), line: 37, column: 3 },
+      ]);
+      expect(r.code).toBe(1);
+    });
+  });
+
+  test("Git-quoted Unicode and control characters resolve to tracked path hashes", () => {
+    const path = process.platform === "win32" ? "文 quoted.txt" : "文\tquoted.txt";
+    withMetadataScanner(reportBody([highFinding()]), { [path]: "safe" }, (dir, env, diff) => {
+      const r = scan(diff, dir, env);
+      expect(findingRows(r.out)[0]?.pathHash).toBe(hash(path));
+      expect(r.code).toBe(1);
+      expect(r.out).not.toContain(path);
+    });
+  });
+
+  test("a later complete-file batch keeps the correct path and source coordinate", () => {
+    const report = metadataReport([highFinding()]);
+    const clean = metadataReport([]);
+    const body = `const high = input === "later"; console.log(high ? ${JSON.stringify(report)} : ${JSON.stringify(clean)}); process.exitCode = high ? 3 : 0;`;
+    withMetadataScanner(body, { "a.txt": "a".repeat(15_999_999), "b.txt": "later" }, (dir, env, diff) => {
+      const r = scan(diff, dir, env);
+      expect(r.code).toBe(1);
+      expect(r.out).toContain("2 batches");
+      expect(findingRows(r.out)).toEqual([
+        { rule: "aws.access_key", severity: "HIGH", pathHash: hash("b.txt"), line: 1, column: 1 },
+      ]);
+    });
+  }, 60_000);
+
+  for (const [name, override] of [
+    ["unknown rule", { id: SECRET_SENTINEL }],
+    ["unknown severity", { severity: SECRET_SENTINEL }],
+    ["non-string severity", { severity: ["HIGH"] }],
+    ["string line", { line: SECRET_SENTINEL }],
+    ["negative line", { line: -1 }],
+    ["fractional column", { col: 1.5 }],
+    ["outside input", { line: 2 }],
+    ["synthetic newline", { col: 5 }],
+  ] as Array<[string, Record<string, unknown>]>) {
+    test(`${name} fails closed without exposing malformed metadata`, () => {
+      // A fixed valid counts object also permits testing malformed severity.
+      const report = { findings: [highFinding(override)], counts: { HIGH: 1, MEDIUM: 0, LOW: 0, WARN: 0 }, oversize: false };
+      withMetadataScanner(`console.log(${JSON.stringify(JSON.stringify(report))}); process.exitCode = 3;`,
+        { "a.txt": "safe" }, (dir, env, diff) => {
+          const r = scan(diff, dir, env);
+          expect(r.code).toBe(1);
+          expect(r.out).toContain("invalid_metadata");
+          expect(findingRows(r.out)).toEqual([]);
+          expect(r.out).not.toContain(SECRET_SENTINEL);
+        });
+    });
+  }
+
+  test("untracked paths and tracked gitlinks cannot become public source metadata", () => {
+    withMetadataScanner(reportBody([highFinding()]), { "a.txt": "safe" }, (dir, env) => {
+      const unknown = scan(fileDiff(`${SECRET_SENTINEL}.txt`, "safe"), dir, env);
+      expect(unknown.code).toBe(1);
+      expect(unknown.out).toContain("invalid_metadata");
+      expect(unknown.out).not.toContain(SECRET_SENTINEL);
+      gitAt(dir, ["update-index", "--add", "--cacheinfo", `160000,${"1".repeat(40)},submodule`]);
+      const head = gitAt(dir, ["write-tree"]).trim();
+      const gitlink = scan(fileDiff("submodule", "safe"), dir, { ...env, HEAD_SHA: head });
+      expect(gitlink.code).toBe(1);
+      expect(gitlink.out).toContain("invalid_metadata");
+      expect(findingRows(gitlink.out)).toEqual([]);
+    });
+  });
+
+  test("count mismatch fails closed and subprocess exceptions never reach public logs", () => {
+    const mismatched = { findings: [highFinding()], counts: { HIGH: 2, MEDIUM: 0, LOW: 0, WARN: 0 }, oversize: false };
+    withMetadataScanner(`console.log(${JSON.stringify(JSON.stringify(mismatched))}); process.exitCode = 3;`,
+      { "a.txt": "safe" }, (dir, env, diff) => {
+        const mismatch = scan(diff, dir, env);
+        expect(mismatch.code).toBe(1);
+        expect(mismatch.out).toContain("invalid_metadata");
+        expect(findingRows(mismatch.out)).toEqual([]);
+        expect(mismatch.out).not.toContain(SECRET_SENTINEL);
+        writeFileSync(join(dir, "bin", "gstack-redact"), `throw new Error(${JSON.stringify(SECRET_SENTINEL)});`);
+        const crash = scan(diff, dir, env);
+        expect(crash.code).toBe(1);
+        expect(crash.out).toContain("fail-closed");
+        expect(crash.out).not.toContain(SECRET_SENTINEL);
+      });
   });
 });
